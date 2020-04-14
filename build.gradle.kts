@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.cloud.tools.gradle.appengine.appyaml.AppEngineAppYamlExtension
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -8,6 +9,21 @@ val versionLogback: String by project
 val versionApp: String by project
 val uberJarFileName: String = "ktor-server-$versionApp-with-dependencies.jar"
 
+// The `apply` approach of adding plugins is the older, yet more flexible method of adding a plugin to
+// your build. This is the required approach unless your desired plugin is available on Gradle's Plugin Repo.
+// Unfortunately the appengine gradle plugin is not available on Gradle's Plugin Repository:
+// https://github.com/GoogleCloudPlatform/app-gradle-plugin
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath("com.google.cloud.tools:appengine-gradle-plugin:2.2.0") }
+}
+apply {
+    plugin("com.google.cloud.tools.appengine")
+}
+
+// Note: The `plugins` block is the newer method of applying plugins, but in order to be able to add a plugin
+// via this mechanism they must be available on the Gradle Plugin Repository: http://plugins.gradle.org/
+// where possible, plugins should be added via this section
 plugins {
     application
     kotlin("jvm") version "1.3.70"
@@ -62,5 +78,19 @@ tasks {
         manifest {
             attributes(mapOf("Main-Class" to application.mainClassName))
         }
+    }
+}
+
+configure<AppEngineAppYamlExtension> {
+    tools {
+        // configure the Cloud Sdk tooling
+    }
+
+    stage {
+        // configure staging for deployment
+    }
+
+    deploy {
+        // configure deployment
     }
 }
