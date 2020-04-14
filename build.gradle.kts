@@ -61,7 +61,7 @@ sourceSets["test"].resources.srcDirs("testresources")
 // Configure the "shadowJar" task to properly build our UberJar
 // we effectively want a jar with zero dependencies we can run and will "just work"
 tasks {
-    named<ShadowJar>("shadowJar") {
+    val shadowJarTask = named<ShadowJar>("shadowJar") {
         // explicitly configure the filename of the resulting UberJar
         archiveFileName.set(uberJarFileName)
 
@@ -78,6 +78,16 @@ tasks {
         manifest {
             attributes(mapOf("Main-Class" to application.mainClassName))
         }
+    }
+
+    // because we're using shadowJar, this task has limited value
+    named("jar") {
+        enabled = false
+    }
+
+    // update the `assemble` task to ensure the creation of a brand new UberJar using the shadowJar task
+    named("assemble") {
+        dependsOn(shadowJarTask)
     }
 }
 
