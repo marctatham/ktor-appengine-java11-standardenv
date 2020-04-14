@@ -87,10 +87,14 @@ configure<AppEngineAppYamlExtension> {
     }
 
     stage {
-        // configure staging for deployment
+        setAppEngineDirectory("appengine")          // where to find the app.yaml
+        setArtifact("build/libs/$uberJarFileName")  // where to find the artifact to upload
     }
 
     deploy {
-        // configure deployment
+        projectId = "GCLOUD_CONFIG"
+        version = versionApp        // maintain meaningful application versions
+        stopPreviousVersion = true  // stop the current version
+        promote = true              // & make this the current version
     }
 }
