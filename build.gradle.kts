@@ -1,9 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktor_version: String by project
-val kotlin_version: String by project
-val logback_version: String by project
+val versionKotlin: String by project
+val versionKtor: String by project
+val versionLogback: String by project
 
 plugins {
     application
@@ -23,10 +23,12 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
-    implementation("io.ktor:ktor-server-jetty:$ktor_version")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
-    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versionKotlin")
+
+    implementation("io.ktor:ktor-server-jetty:$versionKtor")
+    implementation("ch.qos.logback:logback-classic:$versionLogback")
+
+    testImplementation("io.ktor:ktor-server-tests:$versionKtor")
 }
 
 kotlin.sourceSets["main"].kotlin.srcDirs("src")
