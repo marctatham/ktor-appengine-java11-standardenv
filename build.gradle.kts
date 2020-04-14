@@ -5,6 +5,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val versionKotlin: String by project
 val versionKtor: String by project
 val versionLogback: String by project
+val versionApp: String by project
+val uberJarFileName: String = "ktor-server-$versionApp-with-dependencies.jar"
 
 plugins {
     application
@@ -15,8 +17,7 @@ plugins {
 }
 
 group = "com.marctatham"
-version = "0.0.1"
-
+version = versionApp
 application {
     mainClassName = "io.ktor.server.jetty.EngineMain"
 }
@@ -45,6 +46,9 @@ sourceSets["test"].resources.srcDirs("testresources")
 // we effectively want a jar with zero dependencies we can run and will "just work"
 tasks {
     named<ShadowJar>("shadowJar") {
+        // explicitly configure the filename of the resulting UberJar
+        archiveFileName.set(uberJarFileName)
+
         // Appends entries in META-INF/services resources into a single resource. For example, if there are several
         // META-INF/services/org.apache.maven.project.ProjectBuilder resources spread across many JARs the individual
         // entries will all be concatenated into a single META-INF/services/org.apache.maven.project.ProjectBuilder
