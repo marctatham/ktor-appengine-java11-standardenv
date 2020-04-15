@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.cloud.tools.gradle.appengine.appyaml.AppEngineAppYamlExtension
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -8,6 +9,21 @@ val versionLogback: String by project
 val versionApp: String by project
 val uberJarFileName: String = "ktor-server-$versionApp-with-dependencies.jar"
 
+// The `apply` approach of adding plugins is the older, yet more flexible method of adding a plugin to
+// your build. This is the required approach unless your desired plugin is available on Gradle's Plugin Repo.
+// Unfortunately the appengine gradle plugin is not available on Gradle's Plugin Repository:
+// https://github.com/GoogleCloudPlatform/app-gradle-plugin
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath("com.google.cloud.tools:appengine-gradle-plugin:2.2.0") }
+}
+apply {
+    plugin("com.google.cloud.tools.appengine")
+}
+
+// Note: The `plugins` block is the newer method of applying plugins, but in order to be able to add a plugin
+// via this mechanism they must be available on the Gradle Plugin Repository: http://plugins.gradle.org/
+// where possible, plugins should be added via this section
 plugins {
     application
     kotlin("jvm") version "1.3.70"
@@ -45,7 +61,7 @@ sourceSets["test"].resources.srcDirs("testresources")
 // Configure the "shadowJar" task to properly build our UberJar
 // we effectively want a jar with zero dependencies we can run and will "just work"
 tasks {
-    named<ShadowJar>("shadowJar") {
+    val shadowJarTask = named<ShadowJar>("shadowJar") {
         // explicitly configure the filename of the resulting UberJar
         archiveFileName.set(uberJarFileName)
 
@@ -62,5 +78,33 @@ tasks {
         manifest {
             attributes(mapOf("Main-Class" to application.mainClassName))
         }
+    }
+
+    // because we're using shadowJar, this task has limited value
+    named("jar") {
+        enabled = false
+    }
+
+    // update the `assemble` task to ensure the creation of a brand new UberJar using the shadowJar task
+    named("assemble") {
+        dependsOn(shadowJarTask)
+    }
+}
+
+configure<AppEngineAppYamlExtension> {
+    tools {
+        // configure the Cloud Sdk tooling
+    }
+
+    stage {
+        setAppEngineDirectory("appengine")          // where to find the app.yaml
+        setArtifact("build/libs/$uberJarFileName")  // where to find the artifact to upload
+    }
+
+    deploy {
+        projectId = "GCLOUD_CONFIG"
+        version = versionApp        // maintain meaningful application versions
+        stopPreviousVersion = true  // stop the current version
+        promote = true              // & make this the current version
     }
 }
